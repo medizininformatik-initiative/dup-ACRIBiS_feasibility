@@ -14,6 +14,6 @@ Steps
 5. Document your environmant and the results in corresponding file in the "Test Logs" Folder
 6. Upload Output and Log Files to https://fex.ukw.de/public/upload-shares/JqcRKDMZtyL4vkerQZCurlHjQ9hSVjT9
 
-
+You can find some common issues in the FAQ.
 
 Contact: Kai Günther (guenther_k1@ukw.de)
