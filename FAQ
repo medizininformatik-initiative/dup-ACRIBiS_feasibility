@@ -1,0 +1,6 @@
+Q: Why do I receive an error when installing the package anytime?
+A: The installation of package anytime might require the manual installation of the BH-package. The current install_R_packages version automatically requires the BH-package installation. The error should therefore no longer occur.
+
+
+Q: Why do I receive the error "413 Request Entity too large"?
+A: R seems to be unable to process the data with the alloted memory. You can check the memory available to R with the "gc()" command. Your FHIR-Server settings might also prohibit larger request-bodys (may be limited to 1MB). This can be adjusted via "client_max_body_size 100M"
