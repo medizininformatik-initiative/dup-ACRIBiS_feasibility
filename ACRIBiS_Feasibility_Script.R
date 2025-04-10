@@ -294,6 +294,9 @@ if(is_fhir_bundle_empty(bundles_medicationAdministration) == TRUE) {
   #create list of medication_ids that are referenced in the medicationAdministrations of the Patients
   # !! was steht in medicationAdministration_medication_reference?? !!
   medicationAdministration_ids <- sub("Medication/", "", table_medicationAdministrations$medicationAdministration_medication_reference)
+  #also adjust the prefixes in the whole column
+  table_medicationAdministrations$medicationAdministration_subject <- sub("Patient/", "", table_medicationAdministrations$medicationAdministration_subject) 
+  table_medicationAdministrations$medicationAdministration_medication_reference <- sub("Medication/", "", table_medicationAdministrations$medicationAdministration_medication_reference)
   #give out statements after certain chunks to document progress
   write(paste("Cracked Table for MedicationAdministration-Ressources at", Sys.time(), "\n"), file = log, append = T)
   write(paste(nrow(table_medicationAdministrations), " Elements were created for MedicationAdministration \n"), file = log, append = T)
@@ -403,6 +406,7 @@ if(is_fhir_bundle_empty(bundles_medicationAdministration) == TRUE) {
 write(paste("Finished Search for Medication-Ressources at", Sys.time(), "\n"), file = log, append = T)
 write(paste(length(bundles_medication), " Bundles for the Medication-Ressource were found \n"), file = log, append = T)
 
+
 #3. combine tables and retain the medicationAdministrations with the relevant medications (removed if-clause, as table will exist in any case (might be empty though))
 #merge medication information with data in medicationAdministration
 table_meds <- merge(table_medicationAdministrations, table_medications, by.x = "medicationAdministration_medication_reference", by.y = "medication_identifier", all.x = TRUE)
@@ -469,8 +473,7 @@ colnames(table_observations)[colnames(table_observations) == "COMPONENT"] <- "ob
 #remove "Patient/" prefix from subject-column to allow merging of tables, same for medication if necessary
 table_conditions$condition_subject <- sub("Patient/", "", table_conditions$condition_subject) 
 table_observations$observation_subject <- sub("Patient/", "", table_observations$observation_subject)
-table_meds$medicationAdministration_subject <- sub("Patient/", "", table_medicationAdministrations$medicationAdministration_subject) 
-table_meds$medicationAdministration_medication_reference <- sub("Medication/", "", table_medicationAdministrations$medicationAdministration_medication_reference)
+
 
 #give out statements after certain chunks to document progress
 write(paste("Data Cleaning was finished at", Sys.time(), "\n"), file = log, append = T)
