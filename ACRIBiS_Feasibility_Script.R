@@ -161,6 +161,7 @@ LOINC_codes_hscrp <- c("71426-1", "30522-7", "76486-0")
 LOINC_codes_crp <- c("1988-5", "76485-2", "48421-2")
 LOINC_codes_bmi <- c("39156-5", "89270-3")
 LOINC_code_rankin_scale <- "7585-9"
+LOINC_codes_smoking <- c("70483-3", "72166-2", "74011-8")
 LOINC_codes_all <- paste (c(LOINC_codes_height, LOINC_codes_weight, LOINC_codes_bp_overall, LOINC_codes_bp_sys, LOINC_codes_bp_dia, 
                             LOINC_codes_lvef, LOINC_codes_creatinine, LOINC_codes_egfr, LOINC_codes_cholesterol_overall, LOINC_codes_cholesterol_hdl,
                             LOINC_codes_hscrp, LOINC_codes_crp, LOINC_codes_bmi, LOINC_code_rankin_scale), collapse = ",")
@@ -626,6 +627,11 @@ table_observations <- table_observations %>%
     can_calc_observation_cholesterolhdl_smart = ifelse(!is.na(table_observations$observation_code) & table_observations$observation_code %in% LOINC_codes_cholesterol_hdl, 1, 0),
     can_calc_observation_cholesterol_smart = ifelse(!is.na(table_observations$observation_code) & table_observations$observation_code %in% LOINC_codes_cholesterol_overall, 1, 0),
     can_calc_observation_bloodpressure_smart = ifelse(!is.na(table_observations$observation_code) & table_observations$observation_code %in% LOINC_codes_bp_sys, 1, 0),
+    can_calc_observation_egfr_smart = ifelse(!is.na(table_observations$observation_code) & table_observations$observation_code %in% LOINC_codes_egfr, 1, 0),
+    can_calc_observation_crp_smart = ifelse(!is.na(table_observations$observation_code) & table_observations$observation_code %in% LOINC_codes_crp, 1, 0),
+    #if no info for smoking is available, no smoking assumed
+    can_calc_observation_bloodpressure_smart = ifelse(!is.na(table_observations$observation_code) & table_observations$observation_code %in% LOINC_codes_smoking, 1, 99),
+    
     can_calc_observations_smart = ifelse(!is.na(table_observations$observation_code) & (any(table_observations$observation_code %in% LOINC_codes_cholesterol_hdl | table_observations$observation_code %in% LOINC_codes_cholesterol_overall)) & any(table_observations$observation_code %in% LOINC_codes_bp_sys), 1, 0))
 
 table_observations <- table_observations %>%
@@ -633,26 +639,27 @@ table_observations <- table_observations %>%
     can_calc_observations_bloodpressure_maggic = ifelse(!is.na(table_observations$observation_code) & table_observations$observation_code %in% LOINC_codes_bp_sys, 1, 0),
     can_calc_observations_lvef_maggic = ifelse(!is.na(table_observations$observation_code) & table_observations$observation_code %in% LOINC_codes_lvef, 1, 0),
     can_calc_observations_creatinine_maggic = ifelse(!is.na(table_observations$observation_code) & table_observations$observation_code %in% LOINC_codes_creatinine, 1, 0),
-    can_calc_observations_maggic = ifelse(!is.na(table_observations$observation_code) & (any(table_observations$observation_code %in% LOINC_codes_bp_sys & table_observations$observation_code %in% LOINC_codes_lvef & table_observations$observation_code %in% LOINC_codes_creatinine)), 1, 0))
+    can_calc_observations_bmi_maggic = ifelse((!is.na(table_observations$observation_code) & table_observations$observation_code %in% LOINC_codes_bmi) | (!is.na(table_observations$observation_code) & table_observations$observation_code %in% LOINC_codes_height & table_observations$observation_code %in% LOINC_codes_weight), 1, 0),
+    #if no info for smoking is available, no smoking assumed
+    can_calc_observations_smoking_maggic = ifelse(!is.na(table_observations$observation_code) & table_observations$observation_code %in% LOINC_codes_smoking, 1, 99),
+    can_calc_observations_maggic = ifelse(!is.na(table_observations$observation_code) & (any(table_observations$observation_code %in% LOINC_codes_bp_sys & table_observations$observation_code %in% LOINC_codes_lvef & table_observations$observation_code %in% LOINC_codes_creatinine & table_observations$observation_code %in% LOINC_codes_bmi)), 1, 0))
 
 
-#conditions and medications are presumed to be not present in the patient if not available in data just give value of 1
+
+#conditions and medications are presumed to be not present in the patient if not available in data, therefore give value of 1
 table_conditions$can_calc_conditions_chadsvasc <- 1
 table_conditions$can_calc_conditions_smart <- 1
 table_conditions$can_calc_conditions_maggic <- 1
-# table_conditions$can_calc_conditions_charge <- 1
 
 #accommodate empty medication tables
 if(is_fhir_bundle_empty(bundles_medicationAdministration) == TRUE) {
-  table_meds$can_calc_meds_chadsvasc <- 0
-  table_meds$can_calc_meds_smart <- 0
-  table_meds$can_calc_meds_maggic <- 0
-  # table_meds$can_calc_meds_charge <- numeric(0)
+  table_meds$can_calc_meds_chadsvasc <- 99
+  table_meds$can_calc_meds_smart <- 99
+  table_meds$can_calc_meds_maggic <- 99
 } else {
   table_meds$can_calc_meds_chadsvasc <- 1
   table_meds$can_calc_meds_smart <- 1
   table_meds$can_calc_meds_maggic <- 1
-  # table_meds$can_calc_meds_charge <- 1
 }
 
 
@@ -778,14 +785,11 @@ can_calc_required_columns_smart <- c("can_calc_patient_smart", "can_calc_conditi
 can_calc_available_columns_smart <- can_calc_required_columns_smart[can_calc_required_columns_smart %in% colnames(table_eligibility_can_calc)]
 can_calc_required_columns_maggic <- c("can_calc_patient_maggic", "can_calc_conditions_maggic", "can_calc_observations_maggic", "can_calc_meds_maggic")
 can_calc_available_columns_maggic <- can_calc_required_columns_maggic[can_calc_required_columns_maggic %in% colnames(table_eligibility_can_calc)]
-# can_calc_required_columns_charge <- c("can_calc_patient_charge", "can_calc_conditions_charge", "can_calc_observations_charge", "can_calc_meds_charge")
-# can_calc_available_columns_charge <- can_calc_required_columns_charge[can_calc_required_columns_charge %in% colnames(table_can_calc)]
 
 #create summary column for can_calc (if any 0, then 0; if no 0s but any NAs, then NA, if no 0s or NAs then 1)
 table_eligibility_can_calc$can_calc_chadsvasc_overall <- apply(table_eligibility_can_calc[,can_calc_available_columns_chadsvasc], 1, function(x) ifelse(any(x == 0), 0, ifelse(any(is.na(x)), NA, 1)))
 table_eligibility_can_calc$can_calc_smart_overall <- apply(table_eligibility_can_calc[,can_calc_available_columns_smart], 1, function(x) ifelse(any(x == 0), 0, ifelse(any(is.na(x)), NA, 1)))
 table_eligibility_can_calc$can_calc_maggic_overall <- apply(table_eligibility_can_calc[,can_calc_available_columns_maggic], 1, function(x) ifelse(any(x == 0), 0, ifelse(any(is.na(x)), NA, 1)))
-#table_can_calc$can_calc_charge_overall <- apply(table_can_calc[,can_calc_available_columns_charge], 1, function(x) ifelse(any(x == 0), 0, ifelse(any(is.na(x)), NA, 1)))
 
 #check availability of any score
 #previous coding
@@ -880,10 +884,6 @@ table_smart_can_calc <- table_can_calc[, grepl("smart", names(table_can_calc)) &
 table_maggic_can_calc <- table_can_calc[, grepl("maggic", names(table_can_calc)) & names(table_can_calc) != "id"]
 #table_charge_can_calc <- table_can_calc[, grepl("charge", names(table_can_calc)) & names(table_can_calc) != "id"]
 
-
-#cross table for eligibility and variables availability (can_calc) for each Score
-#create combined table from eligibility and can_calc
-#table_eligibility_can_calc <- merge(table_eligibility, table_can_calc, by = c("patient_identifier", "patient_gender", "patient_birthyear",  "patient_age"))
 
 #turn columns into vectors for crosstabs
 eligible_to_factor <- grep("eligible", names(table_eligibility_can_calc), value = TRUE)
