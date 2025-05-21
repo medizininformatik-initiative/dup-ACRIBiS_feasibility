@@ -12,7 +12,7 @@ Steps
 3. Download the LOINC-Codes from https://fex.ukw.de/public/download-shares/5UywHUTAAZmpELZLB04YeU8SUgYpLF3X or https://loinc.org/file-access/?download-id=470626 (Free Account might be necessary) and place the folder in the working directory. Unfortunately the file is too large to upload to github. The Script currently uses Version 2.78
 4. Run the analysis script
 5. Document your environmant and the results in corresponding file in the "Test Logs" Folder
-6. Upload Output and Log Files to https://fex.ukw.de/public/upload-shares/JqcRKDMZtyL4vkerQZCurlHjQ9hSVjT9
+6. Upload Output, Log, and Error Folders with site short hand (e.g. UKW_Output) to https://fex.ukw.de/public/upload-shares/JqcRKDMZtyL4vkerQZCurlHjQ9hSVjT9
 
 You can find some common issues in the FAQ.
 
