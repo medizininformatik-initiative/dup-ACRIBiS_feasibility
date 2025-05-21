@@ -973,8 +973,8 @@ table_eligibility_all_criteria <- table_eligibility_can_calc %>%
   group_by(patient_identifier) %>%
   #mutate correct? otherwise remove from analysis
   mutate(across(contains("eligible"), ~ ifelse(any(. == 1), 1, 0))) %>%
-  select(-starts_with("patient"), -patient_identifier) %>%
-  ungroup() 
+  ungroup() %>%
+  select(c(-patient_identifier, -starts_with("patient")))
 
 #check availability of any score
 #previous code
