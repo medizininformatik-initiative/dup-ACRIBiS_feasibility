@@ -4,3 +4,7 @@ A: The installation of package anytime might require the manual installation of 
 
 Q: Why do I receive the error "413 Request Entity too large"?
 A: R seems to be unable to process the data with the alloted memory. You can check the memory available to R with the "gc()" command. Your FHIR-Server settings might also prohibit larger request-bodys (may be limited to 1MB). This can be adjusted via "client_max_body_size 100M"
+
+
+Q: The Script throws an error when trying to apply parameters rm_tag and stop_on_error, how can I fix this?
+A: You might have installed an older version of the fhircrackr-package, which does not yet support these parameters. This might be due to enviroment- or server-settings. Check your fhircrackr version (using sessionInfo()) and install the current version.
