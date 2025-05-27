@@ -188,8 +188,8 @@ print("Downloading Condition Bundles to identify relevant patients.")
 #bundles_patient_conditions <- fhir_search(request = request_patient_conditions, body = body_patient_conditions, max_bundles = bundle_limit, username = username, password = password, rm_tag = rm_tag, stop_on_error = 0, log_errors = "logs/fhir_search_errors.txt")
 
 #Split into chunks
-relevant_encounter_subjects <- split(relevant_encounter_subjects, ceiling(seq_along(relevant_encounter_subjects) / chunk_size))
-relevant_encounter_subjects_list <- lapply(relevant_encounter_subjects,  paste , collapse = ",")
+relevant_encounter_subjects_split <- split(relevant_encounter_subjects, ceiling(seq_along(relevant_encounter_subjects) / chunk_size))
+relevant_encounter_subjects_list <- lapply(relevant_encounter_subjects_split,  paste , collapse = ",")
 #Download Patients via POST
 request_patient_conditions <- fhir_url(url = diz_url, resource = "Condition")
 bundles_patient_conditions <- lapply(relevant_encounter_subjects_list, function(x) {
@@ -300,8 +300,8 @@ print("Downloading Patient Bundles.")
 #create request for specified URL and Resource
 request_patients <- fhir_url(url = diz_url, resource = "Patient")
 #Split relevant ids into chunks; only one split needed, left out later
-patient_ids_with_conditions_list <- split(patient_ids_with_conditions, ceiling(seq_along(patient_ids_with_conditions) / chunk_size))
-patient_ids_with_conditions_list <- lapply(patient_ids_with_conditions,  paste , collapse = ",")
+patient_ids_with_conditions_split <- split(patient_ids_with_conditions, ceiling(seq_along(patient_ids_with_conditions) / chunk_size))
+patient_ids_with_conditions_list <- lapply(patient_ids_with_conditions_split,  paste , collapse = ",")
 
 #Execute the fhir search as loop for each chunk of ids
 bundles_patient <-  lapply(patient_ids_with_conditions_list, function(x) {
