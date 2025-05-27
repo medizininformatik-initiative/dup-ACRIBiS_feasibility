@@ -5,6 +5,8 @@
 diz_url = ""
 #shorthand for site ending with underscore
 diz_short <- "_"
+#set up path for working directory in case of issues with writing privileges; replace with specific path if necessary (default current wd)
+working_directory <- getwd()
 
 
 #set size of individual fhir requests via loops; number of relevant items will be requested in corresponding increments

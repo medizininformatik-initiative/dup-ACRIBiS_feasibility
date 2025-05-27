@@ -2,13 +2,21 @@ source("ACRIBiS_Feasibility_install_R_packages.R")
 source("ACRIBiS_Feasibility_support_functions.R")
 source("ACRIBiS_Feasibility_config.R")
 
-#source config
-# if(file.exists("ACRIBiS_Feasibility_config.R")&&!dir.exists("ACRIBiS_Feasibility_config.R")){
-#   source("ACRIBiS_Feasibility_config.R")
-# }else{
-#   source("config.R.default")  
-# }
+#set current wd to specified in config-file
+setwd(working_directory)
 
+#in case of timeout use 
+#httr::set_config(httr::timeout(1800)) #timeout in seconds
+
+#check if loinc codes are present in working directory, other folders will be created
+if(file.exists("Loinc_2.78/LoincTable/Loinc.csv")) {
+  write(paste("LOINC-Folder available and CSV-File present.", Sys.time()), file = log, append = T)
+  message("LOINC-Folder available and CSV-File present.")
+  } else {
+    write(paste("The LOINC Code Infromation required to execute this analysis is missing. Please download and save the files in accordance with the readme on github.", Sys.time()), file = log, append = T)
+    message("The LOINC Code Infromation required to execute this analysis is missing. Please download and save the files in accordance with the readme on github.")
+    stop("Script halted: required LOINC-file is missing.")
+    }
 
 #create log file, named for date and time of creation
 if(!dir.exists("Logs")){dir.create(paste0(diz_short, "Logs"))}
@@ -292,7 +300,7 @@ print("Downloading Patient Bundles.")
 #create request for specified URL and Resource
 request_patients <- fhir_url(url = diz_url, resource = "Patient")
 #Split relevant ids into chunks; only one split needed, left out later
-patient_ids_with_conditions <- split(patient_ids_with_conditions, ceiling(seq_along(patient_ids_with_conditions) / chunk_size))
+patient_ids_with_conditions_list <- split(patient_ids_with_conditions, ceiling(seq_along(patient_ids_with_conditions) / chunk_size))
 patient_ids_with_conditions_list <- lapply(patient_ids_with_conditions,  paste , collapse = ",")
 
 #Execute the fhir search as loop for each chunk of ids
@@ -300,7 +308,7 @@ bundles_patient <-  lapply(patient_ids_with_conditions_list, function(x) {
   #create the search body which lists all the found Patient IDs and restricts on specified parameters (birthdate)
   #use "_id" as global FHIR-Search parameter in patient resource
   #Update birthdate, automatisch berechnen
-  body_patient <- fhir_body(content = list("_id" = x, "birthdate" = "lt2007-05-01", "_count" = page_count))
+  body_patient <- fhir_body(content = list("_id" = x, "birthdate" = "lt2006-01-01", "_count" = page_count))
   fhir_search(request = request_patients, 
               body = body_patient, 
               max_bundles = bundle_limit, 
@@ -315,8 +323,8 @@ if(length(bundles_patient)==0){
   bundles_patient <-  lapply(patient_ids_with_conditions_list, function(x) {
     #create the search body which lists all the found Patient IDs and restricts on specified parameters (birthdate)
     #use "_id" as global FHIR-Search parameter in patient resource
-    #Update birthdate, automatisch berechnen
-    body_patient <- fhir_body(content = list("_id" = x, "birthdate" = "lt2007-05-01", "_count" = page_count))
+    #Update birthdate  for 01.01.2024
+    body_patient <- fhir_body(content = list("_id" = x, "birthdate" = "lt2006-01-01", "_count" = page_count))
     fhir_search(request = request_patients, 
                 body = body_patient, 
                 max_bundles = bundle_limit, 
@@ -640,9 +648,6 @@ rm(bundles_medicationAdministration)
 # write(paste("Loaded Bundles at", Sys.time(), "\n"), file = log, append = T)
 #  }
 # 
-
-
-
 
 
 # Data Cleaning ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
