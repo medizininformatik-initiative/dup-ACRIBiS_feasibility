@@ -1,9 +1,9 @@
+#set current wd to specified in config-file
+setwd(working_directory)
+
 source("ACRIBiS_Feasibility_install_R_packages.R")
 source("ACRIBiS_Feasibility_support_functions.R")
 source("ACRIBiS_Feasibility_config.R")
-
-#set current wd to specified in config-file
-setwd(working_directory)
 
 #in case of timeout use 
 #httr::set_config(httr::timeout(1800)) #timeout in seconds
