@@ -7,7 +7,7 @@ The R-files will enable you to conduct the necessary analysis steps for the ACRI
 In Addition you will need the folder with LOINC-Codes in the directory from which you run the r-scripts
 
 Steps
-1. Add your FHIR-server address in the config file under "diz_url" and run the script
+1. Add your FHIR-server address in the config file under "diz_url" and run the script (also add the shorthand for your site and other relevant information like usernames and passwords)
 2. Run the install_packages script
 3. Download the LOINC-Codes from https://fex.ukw.de/public/download-shares/5UywHUTAAZmpELZLB04YeU8SUgYpLF3X or https://loinc.org/file-access/?download-id=470626 (Free Account might be necessary) and place the folder in the working directory. Unfortunately the file is too large to upload to github. The Script currently uses Version 2.78
 4. Run the analysis script
