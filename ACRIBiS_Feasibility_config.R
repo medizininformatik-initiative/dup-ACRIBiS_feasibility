@@ -19,7 +19,7 @@ search_for_bundles <- TRUE
 save_bundles <- FALSE
 
 #set count for how many resources can be filled into one bundle response (default most often 50); depends on FHIR-Server Settings
-page_count <- as.character(50)
+page_count <- as.character(1000)
 #Variable to define whether html elements should be removed or kept ("div" removes html, NULL keeps them); might impact RAM usage
 rm_tag <- NULL
 
