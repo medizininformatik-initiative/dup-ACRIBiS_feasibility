@@ -13,21 +13,21 @@ if(file.exists("Loinc_2.78/LoincTable/Loinc.csv")) {
   write(paste("LOINC-Folder available and CSV-File present.", Sys.time()), file = log, append = T)
   message("LOINC-Folder available and CSV-File present.")
   } else {
-    write(paste("The LOINC Code Infromation required to execute this analysis is missing. Please download and save the files in accordance with the readme on github.", Sys.time()), file = log, append = T)
-    message("The LOINC Code Infromation required to execute this analysis is missing. Please download and save the files in accordance with the readme on github.")
+    write(paste("The LOINC Code Information required to execute this analysis is missing. Please download and save the files in accordance with the readme on github.", Sys.time()), file = log, append = T)
+    message("The LOINC Code Information required to execute this analysis is missing. Please download and save the files in accordance with the readme on github.")
     stop("Script halted: required LOINC-file is missing.")
     }
 
 #create log file, named for date and time of creation
-if(!dir.exists("Logs")){dir.create(paste0(diz_short, "Logs"))}
-log <- paste0("Logs/", format(Sys.time(), "%Y%m%d_%H%M%S"),".txt", collapse = "")
+if(!dir.exists("logs")){dir.create(paste0(diz_short, "logs"))}
+log <- paste0("logs/", format(Sys.time(), "%Y%m%d_%H%M%S"),".txt", collapse = "")
 write(paste("Starting Script ACRIBiS_Feasibility_Script.R at", Sys.time()), file = log, append = T)
 
 
 # Setup -------------------------------------------------------------------
 #create output directory
-if(!dir.exists("Output")){dir.create(paste0(diz_short, "Output"))}
-if(!dir.exists("errors")){dir.create(paste0(diz_short, "errors"))}
+if(!dir.exists(paste0(diz_short, "Output"))){dir.create(paste0(diz_short, "Output"))}
+if(!dir.exists(paste0(diz_short, "errors"))){dir.create(paste0(diz_short, "errors"))}
 if(!dir.exists("XML_Bundles")){dir.create("XML_Bundles")}
 
 #If needed disable peer verification
@@ -166,8 +166,8 @@ table_encounter <- fhir_crack(bundles = bundles_encounters, design = tabledescri
 rm(bundles_encounters)
 
 
-#remove Prefix to match reference column
-relevant_encounter_subjects <- sub("Patient/", "", table_encounter$encounter_subject)
+#remove Prefix to match reference column; add unique to limit to one entry
+relevant_encounter_subjects <- unique(sub("Patient/", "", table_encounter$encounter_subject))
 
 ## find patient IDs with relevant ICD-10 Codes for Condition 
 # Define relevant ICD-codes for CVD Diagnoses                                               
@@ -178,6 +178,14 @@ icd10_codes_patient_conditions <- data.frame( icd_code = c("I05", "I06", "I07", 
                                                            "I42", "I43", "I44", "I45", "I46", "I47", 
                                                            "I48", "I49", "I50", "I51", "I52"))
 icd10_codes_patient_conditions <- icd_expand(icd10_codes_patient_conditions, col_icd = "icd_code", year = 2023)
+
+# define code System to improve search performance
+code_system <- "http://fhir.de/CodeSystem/bfarm/icd-10-gm"
+#add column that includes code system for fhir searches
+icd10_codes_patient_conditions <- icd10_codes_patient_conditions %>%
+  mutate(icd_search_string = paste0(code_system, "|", icd10_codes_patient_conditions$icd_normcode))
+
+
 
 
 # Extract IDs from patients with encounter in 2024 (via IDs list) and relevant diagnosis (ICD-10 list) Identify Required Patients
@@ -193,7 +201,9 @@ relevant_encounter_subjects_list <- lapply(relevant_encounter_subjects_split,  p
 #Download Patients via POST
 request_patient_conditions <- fhir_url(url = diz_url, resource = "Condition")
 bundles_patient_conditions <- lapply(relevant_encounter_subjects_list, function(x) {
-  body_patient_conditions <- fhir_body(content = list("code" = paste(icd10_codes_patient_conditions$icd_normcode, collapse = ","), "subject" = x, "_count" = page_count))
+  #@Kai, nicht korrekt; keine Conditions in Göttingen
+  #body_patient_conditions <- fhir_body(content = list(paste0(icd10_codes_patient_conditions$icd_search_string, collapse = ","), "patient" = x, "_count" = page_count))
+  body_patient_conditions <- fhir_body(content = list(paste0(icd10_codes_patient_conditions$icd_normcode, collapse = ","), "patient" = x, "_count" = page_count))
   fhir_search(
     request = request_patient_conditions,
     body = body_patient_conditions,
@@ -208,7 +218,7 @@ bundles_patient_conditions <- lapply(relevant_encounter_subjects_list, function(
 #rerun the call to fhir_search(), in case of timeout
 if(length(bundles_patient_conditions)==0){
   bundles_patient_conditions <- lapply(relevant_encounter_subjects_list, function(x) {
-    body_patient_conditions <- fhir_body(content = list("code" = paste(icd10_codes_patient_conditions$icd_normcode, collapse = ","), "subject" = x, "_count" = page_count))
+    body_patient_conditions <- fhir_body(content = list("code" = paste(icd10_codes_patient_conditions$icd_normcode, collapse = ","), "patient" = x, "_count" = page_count))
     fhir_search(
       request = request_patient_conditions,
       body = body_patient_conditions,
@@ -264,6 +274,7 @@ medications_betablockers <- c(codes <- c("C07AB04", "C07BB04", "C07CB04", "C07FB
                                          "C07FX01", "C07BA05", "C07EA05", "C07AA07", "C07FX02", "C07BA07", "C07AA06", "S01ED01", "C07DA26", "S01ED01", 
                                          "C07DA26", "S01ED51", "C07DA06", "S01ED62", "S01ED67", "S01ED66", "S01ED61", "S01ED68", "S01ED70", "C07BA06", 
                                          "S01ED63", "C07AG01", "C07CG01", "C07BG01", "C07AG02", "C07FX06", "C07BG02"))
+
 #ACEi
 medications_acei_arb <- c("C09AA07", "C09BA07", "C09BA27", "C09AA01", "C09BA01", "C09BA21", "C09AA08", "C09BA08", "C09BA82", "C09AA02", "C09BA02", "C09BA22", 
                           "C09BB02", "C09BB06", "C09AA09", "C09BA09", "C09BA29", "C09AA16", "C09AA03", "C09BB03", "C09BA03", "C09BA23", "C09AA13", "C09BA13", 
@@ -284,7 +295,7 @@ medications_antithrombotic <- c("B01AA01", "B01AA02", "B01AA03", "B01AA04", "B01
                                 "B01AE03", "B01AE04", "B01AE05", "B01AE06", "B01AE07", "B01AF01", "B01AF02", "B01AF03", "B01AF04", "B01AX01", "B01AX04", "B01AX05", 
                                 "B01AX07", "B01AX11", "B01AY01", "B01AY02")
 
-#no paste, because that creats a single string instead of a list
+#no paste, because that creates a single string instead of a list
 medications_all <- c(medications_betablockers, medications_acei_arb, medications_antithrombotic)
 
 #give out statements after certain chunks to document progress
@@ -308,7 +319,7 @@ bundles_patient <-  lapply(patient_ids_with_conditions_list, function(x) {
   #create the search body which lists all the found Patient IDs and restricts on specified parameters (birthdate)
   #use "_id" as global FHIR-Search parameter in patient resource
   #Update birthdate, automatisch berechnen
-  body_patient <- fhir_body(content = list("_id" = x, "birthdate" = "lt2006-01-01", "_count" = page_count))
+  body_patient <- fhir_body(content = list("_id" = x, "birthdate" = "lt2007-07-01", "_count" = page_count))
   fhir_search(request = request_patients, 
               body = body_patient, 
               max_bundles = bundle_limit, 
@@ -324,7 +335,7 @@ if(length(bundles_patient)==0){
     #create the search body which lists all the found Patient IDs and restricts on specified parameters (birthdate)
     #use "_id" as global FHIR-Search parameter in patient resource
     #Update birthdate  for 01.01.2024
-    body_patient <- fhir_body(content = list("_id" = x, "birthdate" = "lt2006-01-01", "_count" = page_count))
+    body_patient <- fhir_body(content = list("_id" = x, "birthdate" = "lt2007-07-01", "_count" = page_count))
     fhir_search(request = request_patients, 
                 body = body_patient, 
                 max_bundles = bundle_limit, 
@@ -367,7 +378,8 @@ request_conditions <- fhir_url(url = diz_url, resource = "Condition")
 # patient_ids_with_conditions <- split(patient_ids_with_conditions, ceiling(seq_along(patient_ids_with_conditions) / chunk_size))
 # patient_ids_with_conditions_list <- lapply(patient_ids_with_conditions,  paste , collapse = ",")
 bundles_condition <- lapply(patient_ids_with_conditions_list, function(x) {
-body_conditions <- fhir_body(content = list("subject" = x, "_count" = page_count))
+  #"system" = "http://fhir.de/CodeSystem/dimdi/icd-10-gm"
+body_conditions <- fhir_body(content = list("patient" = x, "_count" = page_count))
 fhir_search(request = request_conditions, 
                                  body = body_conditions, 
                                  max_bundles = bundle_limit, 
@@ -380,7 +392,7 @@ fhir_search(request = request_conditions,
 #rerun the call to fhir_search() in case of timeout
 if(length(bundles_condition)==0){
   bundles_condition <- lapply(patient_ids_with_conditions_list, function(x) {
-    body_conditions <- fhir_body(content = list("subject" = x, "_count" = page_count))
+    body_conditions <- fhir_body(content = list("patient" = x, "_count" = page_count))
     fhir_search(request = request_conditions, 
                 body = body_conditions, 
                 max_bundles = bundle_limit, 
@@ -423,7 +435,7 @@ request_observations <- fhir_url(url = diz_url, resource = "Observation")
 #@KG: LOINC-Codes und ICD Codes müssen vermutlich nicht gesplittet werden
 
 bundles_observation <- lapply(patient_ids_with_conditions_list, function(x) {
-body_observation <- fhir_body(content = list("subject" = x, "code" = LOINC_codes_all, "_count" = page_count))
+body_observation <- fhir_body(content = list("patient" = x, "code" = LOINC_codes_all, "_count" = page_count))
 fhir_search(request = request_observations, 
             body = body_observation, 
             max_bundles = bundle_limit, 
@@ -436,7 +448,7 @@ fhir_search(request = request_observations,
 #rerun the call to fhir_search() in case of timeout
 if(length(bundles_observation)==0){
   bundles_observation <- lapply(patient_ids_with_conditions_list, function(x) {
-    body_observation <- fhir_body(content = list("subject" = x, "code" = LOINC_codes_all, "_count" = page_count))
+    body_observation <- fhir_body(content = list("patient" = x, "code" = LOINC_codes_all, "_count" = page_count))
     fhir_search(request = request_observations, 
                 body = body_observation, 
                 max_bundles = bundle_limit, 
@@ -479,7 +491,7 @@ print("Downloading MedicationAdministration Bundles.")
 request_medicationAdministrations <- fhir_url(url = diz_url, resource = "MedicationAdministration")
 
 bundles_medicationAdministration <- lapply(patient_ids_with_conditions_list, function(x) {
-  body_medicationAdministration <- fhir_body(content = list("subject" = x, "_count" = page_count))
+  body_medicationAdministration <- fhir_body(content = list("patient" = x, "_count" = page_count))
   fhir_search(request = request_medicationAdministrations, 
               body = body_medicationAdministration, 
               max_bundles = bundle_limit, 
@@ -492,7 +504,7 @@ bundles_medicationAdministration <- lapply(patient_ids_with_conditions_list, fun
  if(length(bundles_medicationAdministration)==0){
   #rerun the call to fhir_search()
    bundles_medicationAdministration <- lapply(patient_ids_with_conditions_list, function(x) {
-     body_medicationAdministration <- fhir_body(content = list("subject" = x, "_count" = page_count))
+     body_medicationAdministration <- fhir_body(content = list("patient" = x, "_count" = page_count))
      fhir_search(request = request_medicationAdministrations, 
                  body = body_medicationAdministration, 
                  max_bundles = bundle_limit, 
@@ -533,6 +545,11 @@ if(is_fhir_bundle_empty(bundles_medicationAdministration) == TRUE) {
   write(paste("Cracked Table for MedicationAdministration-Resource at", Sys.time(), "\n"), file = log, append = T)
   write(paste(nrow(table_medicationAdministrations), " Elements were created for MedicationAdministration \n"), file = log, append = T)
 }
+# @Kai #account for multiple medication references per medication administration 
+# # Assuming ATC codes are space-separated (adjust if comma-separated)
+# med_table_long <- med_table %>%
+#   separate_rows(medication_reference, sep = " ")
+
 
 #2. search for all medications from the identified medication administrations
 print("Downloading Medication Bundles.")
@@ -689,6 +706,8 @@ table_conditions$time_since_first_diagnosis_using_onsetdate <- difftime(Sys.time
 
 #import table with LOINC Code for reference, send CSV with Script, change path to be universally applicable
 loinc_codes <- read.csv("Loinc_2.78/LoincTable/Loinc.csv")
+# :::-Suffix entfernen falls vorhanden (siehe Bonn)
+table_observations$observation_code <- sub(":::*", "", table_observations$observation_code)
 #add content of LOINC codes to observation table
 table_observations <-  merge(table_observations, loinc_codes[, c("LOINC_NUM", "COMPONENT")], by.x = "observation_code", by.y = "LOINC_NUM", all.x = TRUE)
 # Rename column COMPONENT to observation_LOINC_term
