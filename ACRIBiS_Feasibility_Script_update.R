@@ -831,31 +831,31 @@ rm(bundles_procedure)
 
 # #Save Bundles (obsolete) -------------------------------------------------------------------------------------------------------------------------------------------------------------
 # 
-# if (save_bundles == TRUE)   {
-# # (only after first download) move to FHIR Search section (so far only medicationAdministration)
-# #save and load to circumvent long download times for bundles; comment and uncomment with line above (fhir_search) as necessary
-# message("Saving  Bundles.\n")
-# fhir_save(bundles = bundles_patient, directory = "XML_Bundles/bundles_patient")
-# fhir_save(bundles = bundles_condition, directory = "XML_Bundles/bundles_condition")
-# fhir_save(bundles = bundles_observation, directory = "XML_Bundles/bundles_observation")
-# fhir_save(bundles = bundles_medicationAdministration, directory = "XML_Bundles/bundles_medicationAdministration")
-# fhir_save(bundles = bundles_medication, directory = "XML_Bundles/bundles_medication")
-# #give out statements after certain chunks to document progress
-# write(paste("Saved Bundles at ", Sys.time(), "\n"), file = log, append = T)
-#  } alte Klammern für search_for_bundles
-# } else {
-# #Load Bundles (obsolete) ---------------------------------------------------------------------------------------------------------------------------------------------------------------
-# #executed if search_for_bundles == FALSE
-# message("Loading saved Bundles.\n")
-# bundles_patient <- fhir_load(directory = "XML_Bundles/bundles_patient")
-# bundles_condition <- fhir_load(directory = "XML_Bundles/bundles_condition")
-# bundles_observation <- fhir_load(directory = "XML_Bundles/bundles_observation")
-# bundles_medication <- fhir_load(directory = "XML_Bundles/bundles_medication")
-# bundles_medicationAdministration <- fhir_load(directory = "XML_Bundles/bundles_medicationAdministration")
-# #give out statements after certain chunks to document progress
-# write(paste("Loaded Bundles at", Sys.time(), "\n"), file = log, append = T)
-#  }
-# 
+if (save_bundles == TRUE)   {
+# (only after first download) move to FHIR Search section (so far only medicationAdministration)
+#save and load to circumvent long download times for bundles; comment and uncomment with line above (fhir_search) as necessary
+message("Saving  Bundles.\n")
+fhir_save(bundles = bundles_patient, directory = "XML_Bundles/bundles_patient")
+fhir_save(bundles = bundles_condition, directory = "XML_Bundles/bundles_condition")
+fhir_save(bundles = bundles_observation, directory = "XML_Bundles/bundles_observation")
+fhir_save(bundles = bundles_medicationAdministration, directory = "XML_Bundles/bundles_medicationAdministration")
+fhir_save(bundles = bundles_medication, directory = "XML_Bundles/bundles_medication")
+#give out statements after certain chunks to document progress
+write(paste("Saved Bundles at ", Sys.time(), "\n"), file = log, append = T)
+ } alte Klammern für search_for_bundles
+} else {
+#Load Bundles (obsolete) ---------------------------------------------------------------------------------------------------------------------------------------------------------------
+#executed if search_for_bundles == FALSE
+message("Loading saved Bundles.\n")
+bundles_patient <- fhir_load(directory = "XML_Bundles/bundles_patient")
+bundles_condition <- fhir_load(directory = "XML_Bundles/bundles_condition")
+bundles_observation <- fhir_load(directory = "XML_Bundles/bundles_observation")
+bundles_medication <- fhir_load(directory = "XML_Bundles/bundles_medication")
+bundles_medicationAdministration <- fhir_load(directory = "XML_Bundles/bundles_medicationAdministration")
+#give out statements after certain chunks to document progress
+write(paste("Loaded Bundles at", Sys.time(), "\n"), file = log, append = T)
+ }
+
 
 
 # Data Cleaning ---------------------------------------------------------------------------------------------------------------------------------------------------------------------
