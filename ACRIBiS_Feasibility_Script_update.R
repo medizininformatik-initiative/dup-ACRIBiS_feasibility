@@ -842,7 +842,7 @@ fhir_save(bundles = bundles_medicationAdministration, directory = "XML_Bundles/b
 fhir_save(bundles = bundles_medication, directory = "XML_Bundles/bundles_medication")
 #give out statements after certain chunks to document progress
 write(paste("Saved Bundles at ", Sys.time(), "\n"), file = log, append = T)
- } alte Klammern für search_for_bundles
+# } alte Klammern für search_for_bundles
 } else {
 #Load Bundles (obsolete) ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 #executed if search_for_bundles == FALSE
@@ -1155,7 +1155,7 @@ table_observations <- table_observations %>%
 
 #### Observation Units ----
 
-table_observations$observation_value_num
+#table_observations$observation_value_num
 
 ##Mapping for different units
 loinc_unit_map <- tribble(
@@ -1335,7 +1335,8 @@ table_conditions <- table_conditions %>%
 ## SMART: age, sex, diabetes, smoking, systolic blood pressure, total cholesterol, hdl cholesterol, hs CRP, eGFR, time since first cvd event, history CVD, history CAD, history PAD, history AAA, antithrombotic treatment
 ## use TRUE and FALSE for Function input
 table_patients$compute_age_smart <- table_patients$patient_age
-table_patients$compute_sex_smart <- ifelse(table_patients$patient_gender=="male", TRUE, FALSE)
+table_patients$compute_sex_smart <- table_patients$patient_gender
+table_patients$compute_sex_male_smart <- ifelse(table_patients$patient_gender=="male", TRUE, FALSE)
 table_conditions$compute_diabetes_smart <- ifelse(table_conditions$condition_code %in% icd10_codes_diabetes, TRUE, FALSE)
 #table_conditions$compute_timesincefirstcvd_smart <- ifelse(table_conditions$condition_code %in% icd10_codes_patient_conditions, as.POSIXct.Date(Sys.Date()) - table_conditions$condition_recordedDate, NA)
 table_conditions$compute_timesincefirstcvd_smart <- ifelse(table_conditions$condition_code %in% icd10_codes_patient_conditions$icd_normcode, time_length(interval(as.Date(table_conditions$condition_recordedDate), Sys.Date()),"years"), NA_real_)
@@ -1364,12 +1365,12 @@ table_patients$compute_age_chadsvasc <- case_when(
                                               table_patients$patient_age < 65 ~ 0,
                                               table_patients$patient_age >= 65 & table_patients$patient_age < 75 ~ 1,
                                               table_patients$patient_age >= 75 ~ 2
-                                              TRUE ~ 99)
+                                              TRUE ~ NA_real_)
 #male = 0, female = 1; in data 1=female, 2=male
 table_patients$compute_sex_chadsvasc <- case_when(
                                               table_patients$patient_gender == 1 ~ 1,
                                               table_patients$patient_gender == 2 ~ 0,
-                                              TRUE ~ 99)
+                                              TRUE ~ NA_real_)
 table_conditions$compute_diabetes_chadsvasc <- ifelse(table_conditions$condition_code %in% icd10_codes_diabetes, 1, 0)
 table_conditions$compute_vasculardisease_chadsvasc <- ifelse(table_conditions$condition_code %in% vasculardisease_icd_codes, 1, 0)
 table_conditions$compute_hypertension_chadsvasc <- ifelse(table_conditions$condition_code %in% hypertension_icd_codes, 1, 0)
@@ -1380,30 +1381,36 @@ table_conditions$compute_cvd_chadsvasc <- ifelse(table_conditions$condition_code
 ## MAGGIC: age (per 10 years), sex, bmi, systolic BP, NYHA, smoking, diabetes, first cvd more than 18 months, chronic lung disease, betablockers, ACEi/ARB, LVEF, Creatinine, status (inpatient)
 table_patients$compute_age_maggic <- table_patients$patient_age
 table_patients$compute_sex_maggic <- table_patients$patient_gender
+table_patients$compute_sex_male_maggic <- ifelse(table_patients$patient_gender=="male", TRUE, FALSE)
 table_observations$compute_bmi_maggic <- ifelse(table_observations$observation_code %in% LOINC_codes_bmi & index_most_recent_observation == 1, table_observations$observation_value, NA)
 table_observations$compute_sysbp_maggic <- ifelse(table_observations$observation_code %in% LOINC_codes_bp_sys & index_most_recent_observation == 1, table_observations$observation_value, NA)
-table_observations$compute_smoking_maggic <- ifelse(table_observations$observation_code %in% LOINC_codes_smoking & index_most_recent_observation == 1, 1, 0)
+table_observations$compute_smoking_maggic <- ifelse(table_observations$observation_code %in% LOINC_codes_smoking & index_most_recent_observation == 1, TRUE, FALSE)
 table_observations$compute_lvef_maggic <- ifelse(table_observations$observation_code %in% LOINC_codes_lvef & index_most_recent_observation == 1, table_observations$observation_value, NA)
 table_observations$compute_creatinine_maggic <- ifelse(table_observations$observation_code %in% LOINC_codes_creatinine & index_most_recent_observation == 1, table_observations$observation_value, NA)
 
 #latest NYHA (optional highest NYHA index_highest_nyha)
 table_conditions$compute_nyha_maggic <- ifelse(table_conditions$condition_code %in% icd10_codes_nyha & index_most_recent_nyha == 1, table_conditions$condition_code, NA)
-table_conditions$compute_diabetes_maggic <- ifelse(table_conditions$condition_code %in% icd10_codes_diabetes, 1, 0)
-table_conditions$compute_copd_maggic <- ifelse(table_conditions$condition_code %in% icd10_codes_copd, 1, 0)
+table_conditions$compute_diabetes_maggic <- ifelse(table_conditions$condition_code %in% icd10_codes_diabetes, TRUE, FALSE)
+table_conditions$compute_copd_maggic <- ifelse(table_conditions$condition_code %in% icd10_codes_copd, TRUE, FALSE)
 #hf more than 18 months ago, difftime gives days; 18*30 = 540 days since first diagnosis
-table_conditions$compute_hf18months_maggic <- ifelse(table_conditions$condition_code %in% icd10_codes_heartfailure & table_conditions$time_since_first_diagnosis_using_recordeddate > 540, 1, 0)
+table_conditions$compute_hf18months_maggic <- ifelse(table_conditions$condition_code %in% icd10_codes_heartfailure & table_conditions$time_since_first_diagnosis_using_recordeddate > 540, TRUE, FALSE)
 
 table_meds$compute_betablockers_maggic <- ifelse(table_meds$medication_code %in% medications_betablockers, 1, 0)
 table_meds$compute_acei_arb_maggic <- ifelse(table_meds$medication_code %in% medications_acei_arb, 1, 0)
+#additional variables for score calculation; adjust assignment for negative case
+table_meds$compute_no_betablockers_maggic <- ifelse(table_meds$medication_code %in% medications_betablockers, FALSE, TRUE)
+table_meds$compute_no_acei_arb_maggic <- ifelse(table_meds$medication_code %in% medications_acei_arb, FALSE, TRUE)
 
-### Preparation BCN Bio --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+### Preparation BCN --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ## BCN Bio: age, sex, nyha, NA, eGFR, Hb, LVEF (v3), HF duration (v3), diabetes (v3), No. hospitalisations (v3), loop diuretics, statins, betablockers, ACEi/ARB, MRA (v3), ARNi (v3), iSGLT2 (v3), CRT (v3), ICD (v3), hs-cTnT, ST2, NT-proBNP
 table_patients$compute_age_bcn <- table_patients$patient_age
 table_patients$compute_sex_bcn <- table_patients$patient_gender
+table_patients$compute_sex_female_bcn <- ifelse(table_patients$patient_gender=="female", TRUE, FALSE)
 #latest NYHA (optional highest NYHA index_highest_nyha)
 table_conditions$compute_nyha_bcn <- ifelse(table_conditions$condition_code %in% icd10_codes_nyha & index_most_recent_nyha == 1, table_conditions$condition_code, NA)
 #choose first date that is available
-table_conditions$compute_hfduration_bcn_v3 <- ifelse(table_conditions$condition_code %in% icd10_codes_heartfailure, difftime(Sys.time(), coalesce(table_conditions$condition_onsetDate, table_conditions$condition_recordedDate)), NA) 
+table_conditions$compute_hfduration_days_bcn_v3 <- ifelse(table_conditions$condition_code %in% icd10_codes_heartfailure, difftime(Sys.time(), coalesce(table_conditions$condition_onsetDate, table_conditions$condition_recordedDate)), NA) 
+table_conditions$compute_hfduration_months_bcn_v3 <- ifelse(table_conditions$condition_code %in% icd10_codes_heartfailure, difftime(Sys.time(), coalesce(table_conditions$condition_onsetDate, table_conditions$condition_recordedDate))/30, NA)
 table_conditions$compute_diabetes_bcn_v3 <- ifelse(table_conditions$condition_code %in% icd10_codes_diabetes, 1, 0)
 
 table_observations$compute_natrium_bcn <- ifelse(table_observations$observation_code %in% LOINC_codes_natrium & index_most_recent_observation == 1, table_observations$observation_value, NA)
@@ -1414,7 +1421,8 @@ table_observations$compute_hsctnt_bcn <- ifelse(table_observations$observation_c
 table_observations$compute_st2_bcn <- ifelse(table_observations$observation_code %in% LOINC_codes_st2 & index_most_recent_observation == 1, table_observations$observation_value, NA)
 table_observations$compute_ntprobnp_bcn <- ifelse(table_observations$observation_code %in% LOINC_codes_ntprobnp & index_most_recent_observation == 1, table_observations$observation_value, NA)
 #@KG dose of loop diuretics, not in UCC formula?
-table_meds$compute_loopdiuretics_bcn <- ifelse(table_meds$medication_code %in% medications_loopdiuretic, 1, 0)
+table_meds$compute_loopdiuretics_torasemide_bcn <- ifelse(table_meds$medication_code %in% medications_torasemid, table_meds$medication_strength, 0)
+table_meds$compute_loopdiuretics_furosemide_bcn <- ifelse(table_meds$medication_code %in% medications_furosemid, table_meds$medication_strength, 0)
 table_meds$compute_statins_bcn <- ifelse(table_meds$medication_code %in% medications_statins, 1, 0)
 table_meds$compute_betablockers_bcn <- ifelse(table_meds$medication_code %in% medications_betablockers, 1, 0)
 table_meds$compute_acei_arb_bcn <- ifelse(table_meds$medication_code %in% medications_acei_arb, 1, 0)
@@ -1718,54 +1726,163 @@ navalues_medication_columns <- table_eligibility_can_calc_compute %>%
 #   `HDL-cholesterol in mmol/L` = 1, `Total cholesterol in mmol/L` = 3, `eGFR in mL/min/1.73m²` = 177, `hs-CRP in mg/dL` = 6, `Antithrombotic treatment` = FALSE
 
 
+### Compute SMART ----
 
+#rename columns to fit calculation function
+compute_smart_df <- table_compute[, c(3, grep("compute", "smart")), drop = FALSE]
+  
+compute_smart_df <- compute_smart_df  
+  rename(
+    `Age in years` = compute_age_smart,
+    `Male` = compute_sex_male_smart,
+    `Current smoker` = compute_smoking_smart,
+    `Systolic blood pressure in mmHg` = compute_sysbp_smart,
+    `Diabetic` = compute_diabetes_smart,
+    `History of coronary artery disease` = compute_cadhistory_smart,
+    `History of cerebrovascular disease` = compute_cvdhistory_smart,
+    `Abdominal aortic aneurysm` = compute_aaahistory_smart,
+    `Peripheral artery disease` = compute_padhistory_smart,
+    `Years since first diagnosis of vascular disease` = compute_timesincefirstcvd_smart,
+    `HDL-cholesterol in mmol/L` = compute_cholhdl_smart,
+    `Total cholesterol in mmol/L` = compute_totalchol_smart,
+    `eGFR in mL/min/1.73m²` = compute_egfr_smart,
+    `hs-CRP in mg/dL` = compute_hscrp_smart,
+    `Antithrombotic treatment` = compute_antithrombotictreatment_smart
+  )
 
-# smart_df_compute <- table_eligibility_can_calc_compute
-#   select(., all_of(
-#     names(.)[
-#       grepl("smart", names(.), ignore.case = TRUE) &
-#         grepl("compute", names(.), ignore.case = TRUE)])
-#   )
-#   
-#   
-# table_eligibility_can_calc_compute <- table_eligibility_can_calc_compute %>%
-#   mutate(
-#     smart_score_value =
-#   )
-# 
-# #compute chadsvasc score
-# table_eligibility_can_calc_compute <- table_eligibility_can_calc_compute %>%
-#   mutate(
-#     chadsvasc_score_value =
-#       rowSums(
-#         select(., all_of(
-#           names(.)[
-#             grepl("chadsvasc", names(.), ignore.case = TRUE) &
-#               grepl("compute", names(.), ignore.case = TRUE)])
-#         )
-#       )
-#   )
-# 
-# 
+#set data types  
+  compute_smart_df <- compute_smart_df %>%
+    mutate(
+      across(c(`Male`, `Current smoker`, `Diabetic`,
+               `History of coronary artery disease`,
+               `History of cerebrovascular disease`,
+               `Abdominal aortic aneurysm`,
+               `Peripheral artery disease`,
+               `Antithrombotic treatment`),
+             as.logical),
+      across(c(`Age in years`,
+               `Systolic blood pressure in mmHg`,
+               `Years since first diagnosis of vascular disease`,
+               `HDL-cholesterol in mmol/L`,
+               `Total cholesterol in mmol/L`,
+               `eGFR in mL/min/1.73m²`,
+               `hs-CRP in mg/dL`),
+             as.numeric)
+    )
+  
+  #create new data frame with provided function
+  compute_smart_df_export <- run_smart_score_from_df_if_valid(compute_smart_df)
+    
+    
+  # compute_smart_df_export <- compute_smart_df %>%
+  #   mutate(smart_score = pmap(
+  #     select(., everything()),
+  #     ~ run_smart_score_if_valid(params = list(  "Age in years", "Male", "Current smoker", "Systolic blood pressure in mmHg", "Diabetic",
+  #                                                "History of coronary artery disease", "History of cerebrovascular disease", "Abdominal aortic aneurysm", "Peripheral artery disease",
+  #                                                "Years since first diagnosis of vascular disease",
+  #                                                "HDL-cholesterol in mmol/L", "Total cholesterol in mmol/L", "eGFR in mL/min/1.73m²", "hs-CRP in mg/dL",
+  #                                                "Antithrombotic treatment"))
+  #   ))
+  
+ 
+### Compute CHA2DS2VASc -----------------------------------------------------------------------------------
+
+compute_chadsvasc_df <- table_compute[, c(3, grep("compute", "chadsvasc")), drop = FALSE]
+  
+  #values for computation already assigned in preperation step
+  compute_chadsvasc_df_export <- compute_chadsvasc_df %>%
+    mutate(
+      chadsvasc_score =
+        compute_age_chadsvasc +
+        compute_sex_chadsvasc +
+        compute_diabetes_chadsvasc +
+        compute_vasculardisease_chadsvasc +
+        compute_hypertension_chadsvasc +
+        compute_heartfailure_chadsvasc +
+        compute_cvd_chadsvasc
+    )
+  
+  #assume missings to be 0 to still calculate the score
+  compute_chadsvasc_df_export <- compute_chadsvasc_df %>%
+    mutate(
+      chadsvasc_score_sens = 
+        coalesce(compute_age_chadsvasc, 0) +
+        coalesce(compute_sex_chadsvasc, 0) +
+        coalesce(compute_diabetes_chadsvasc, 0) +
+        coalesce(compute_vasculardisease_chadsvasc, 0) +
+        coalesce(compute_hypertension_chadsvasc, 0) +
+        coalesce(compute_heartfailure_chadsvasc, 0) +
+        coalesce(compute_cvd_chadsvasc, 0)
+    )
+  
+  
+  
+### Compute MAGGIC ---------------------------------------------------------------------------------------
+
+compute_maggic_df <- table_compute[, c(3, grep("compute", "maggic")), drop = FALSE]
+  
+  compute_maggic_df <- compute_maggic_df  
+  rename(
+    `Ejection fraction (%)` = compute_lvef_maggic,
+    `Age (years)` = compute_age_maggic ,
+    `Systolic blood pressure (mmHg)` = compute_sysbp_maggic,
+    `BMI (kg/m²)` = compute_bmi_maggic,
+    `Creatinine (µmol/l)` = compute_creatinine_maggic,
+    `NYHA Class` = compute_nyha_maggic,
+    `Male` = compute_sex_male_maggic,
+    `Current smoker` = compute_smoking_maggic,
+    `Diabetic` = compute_diabetes_maggic,
+    `Diagnosis of COPD` = compute_copd_maggic,
+    `First diagnosis of heart failure in the past 18 months` = compute_hf18months_maggic,
+    `Not on beta blocker` = compute_no_betablockers_maggic,
+    `Not on ACEI/ARB` = compute_no_acei_arb_maggic
+  )
+  
+  
+  compute_maggic_df_export <- calc_maggic_score_from_df(compute_maggic_df)
+  
+  
+  
+### Compute BCN ---------------------------------------------------------------------------------------  
 #    
 # 
 # #bcn parameters: @KG do i need to seperately list all variables?
 # #bcn computation
-# table_eligibility_can_calc_compute$bcn_score <- calc_barcelona_hf_score()
-# 
-# 
-# 
-# #compute MAGGIC
-# #calc_maggic_score()
-# 
-# 
-# 
 
+   compute_bcn_df <- table_compute[, c(3, grep("compute", "bcn")), drop = FALSE]
+  
+  compute_bcn_df <- compute_bcn_df
+  rename(
+    `Age (years)` = compute_age_bcn,
+    `Female` = compute_sex_female_bcn,
+    `NYHA Class` = compute_nyha_bcn,
+    `Sodium (mmol/L)` = compute_natrium_bcn,
+    `eGFR in mL/min/1.73m²` = compute_egfr_bcn,
+    `Hemoglobin (g/dL)` = compute_haemoglobin_bcn,
+    `Loop Diuretic Furosemide Dose` = compute_loopdiuretics_furosemide_bcn,
+    `Loop Diuretic Torasemide Dose` = compute_loopdiuretics_torasemide_bcn,
+    `Statin` = compute_statins_bcn,
+    `ACEi/ARB` = compute_acei_arb_bcn,
+    `Betablocker` = compute_betablockers_bcn,
+    `HF Duration in months` = compute_hfduration_months_bcn_v3,
+    `Diabetes Mellitus` = compute_diabetes_bcn_v3,
+    `Hospitalisation Prev. Year` = in_last_year,
+    `MRA` = compute_mra_bcn,
+    `ICD` = compute_icd_bcn_v3,
+    `CRT` = compute_crt_bcn_v3,
+    `ARNI` = compute_arni_bcn,
+    `NT-proBNP in pg/mL` = compute_ntprobnp_bcn,
+    `hs-cTnT in ng/L` = compute_hsctnt_bcn,
+    `ST2 (ng/mL)` = compute_st2_bcn,
+    `SGLT2i` = compute_isglt2_bcn,
+    `Ejection fraction (%)` = compute_lvef_bcn_v3 
+  )
+  
+  compute_bcn_df_export <- calc_barcelona_score_from_df(compute_bcn_df)
 
+  
 
-
-
-
+### Additional Info on Data ----
 
 #count number of patients (navalues_all_columns counts data entries not patients) who have NA in condition code, observation code or medication code 
 precentage_patients_with_no_code_condition <- table_conditions %>% filter(is.na(condition_code)) %>% summarise(condition_code_na = n_distinct(condition_subject)/length(unique(table_conditions$condition_subject)))
