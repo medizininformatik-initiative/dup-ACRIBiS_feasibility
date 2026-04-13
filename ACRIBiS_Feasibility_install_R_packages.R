@@ -1,10 +1,11 @@
 #list of required packages
-required_packages <- c("fhircrackr", "dplyr", "tidyr", "sqldf", "BH", "anytime", "ICD10gm", "knitr", "xml2", "lubridate", "remotes")
+required_packages <- c("fhircrackr", "dplyr", "tidyr", "sqldf", "BH", "anytime", "ICD10gm", "knitr", "xml2", "lubridate")
 
 #install each listed package if available
 for(package in required_packages){
   
-  available <- suppressWarnings(require(package, character.only = T))
+  #available <- suppressWarnings(require(package, character.only = T))
+  available <- require(package, character.only = T)
   
   if(!available){
     install.packages(package, repos="https://ftp.fau.de/cran/", quiet = TRUE)
