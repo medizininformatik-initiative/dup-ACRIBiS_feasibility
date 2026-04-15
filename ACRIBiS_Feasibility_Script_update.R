@@ -1,8 +1,7 @@
-#set current wd to specified in config-file
-
+#source supporting scripts
 source("ACRIBiS_Feasibility_install_R_packages.R")
 source("ACRIBiS_Feasibility_support_functions.R")
-source("ACRIBiS_Feasibility_config.R")
+source("ACRIBiS_Feasibility_config_local.R")
 
 #source score calculations
 source("barcelona_hf_v3.R")
@@ -10,14 +9,23 @@ source("smart.R")
 source("maggic.R")
 source("chads_vasc.R")
 
-
+#after loading config, so that correct reference exists
 setwd(working_directory)
+
+#create log file, named for date and time of creation
+if(!dir.exists("logs")){
+  dir.create(paste0(diz_short, "logs"))
+  }
+log <- paste0(diz_short, "logs/", format(Sys.time(), "%Y%m%d_%H%M%S"),".txt", collapse = "")
+write(paste("Starting Script ACRIBiS_Feasibility_Script.R at", Sys.time()), file = log, append = T)
+
 
 #in case of timeout use 
 #httr::set_config(httr::timeout(1800)) #timeout in seconds
 
 #check if loinc codes are present in working directory, other folders will be created
-if(file.exists("Loinc_2.78/LoincTable/Loinc.csv")) {
+#@ KG ggf auf 2.82 updaten; gab es hier änderungen?
+if(file.exists(loinc_path)) {
   write(paste("LOINC-Folder available and CSV-File present.", Sys.time()), file = log, append = T)
   message("LOINC-Folder available and CSV-File present.")
   } else {
@@ -26,18 +34,8 @@ if(file.exists("Loinc_2.78/LoincTable/Loinc.csv")) {
     stop("Script halted: required LOINC-file is missing.")
     }
 
-#create log file, named for date and time of creation
-if(!dir.exists("logs")){dir.create(paste0(diz_short, "logs"))}
-log <- paste0("logs/", format(Sys.time(), "%Y%m%d_%H%M%S"),".txt", collapse = "")
-write(paste("Starting Script ACRIBiS_Feasibility_Script.R at", Sys.time()), file = log, append = T)
-
 
 # Setup -------------------------------------------------------------------
-#create output directory
-if(!dir.exists(paste0(diz_short, "Output"))){dir.create(paste0(diz_short, "Output"))}
-if(!dir.exists(paste0(diz_short, "errors"))){dir.create(paste0(diz_short, "errors"))}
-if(!dir.exists("XML_Bundles")){dir.create("XML_Bundles")}
-
 #If needed disable peer verification
 if(!ssl_verify_peer){httr::set_config(httr::config(ssl_verifypeer = 0L))}
 
@@ -187,7 +185,7 @@ relevant_encounter_subjects_list <- lapply(relevant_encounter_subjects_split,  p
 request_patient_conditions <- fhir_url(url = diz_url, resource = "Condition")
 bundles_patient_conditions <- lapply(relevant_encounter_subjects_list, function(x) {
   #body_patient_conditions <- fhir_body(content = list(paste0(icd10_codes_patient_conditions$icd_search_string, collapse = ","), "patient" = x, "_count" = page_count))
-  body_patient_conditions <- fhir_body(content = list(paste0(icd10_codes_patient_conditions$icd_normcode, collapse = ","), "patient" = x, "_count" = page_count))
+  body_patient_conditions <- fhir_body(content = list(code = paste0(icd10_codes_patient_conditions$icd_normcode, collapse = ","), "patient" = x, "_count" = page_count))
   fhir_search(
     request = request_patient_conditions,
     body = body_patient_conditions,
@@ -216,6 +214,8 @@ if(length(bundles_patient_conditions)==0){
   })
 }
 #unpack nested fhir_bundle_lists, no longer required, as fhir_crack handles this internally
+#still required for other xml methods
+bundles_patient_conditions <- unlist(bundles_patient_conditions, recursive = FALSE)y
 #bundles_patient_conditions <- unlist(bundles_patient_conditions, recursive = F)
 # no saving necessary
 table_patient_conditions <- fhir_crack(bundles = bundles_patient_conditions, design = tabledescription_condition, verbose = 1)

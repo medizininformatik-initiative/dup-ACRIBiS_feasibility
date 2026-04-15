@@ -7,10 +7,12 @@ convert_date_to_year <- function(birthdate) {
 }
 
 
-#Neuer Code von JP
-is_fhir_bundle_empty <- function(bundlelist){
-  length(xml2::xml_find_first(bundlelist[[1]], "entry"))==0
-}
+#Neuer Code von JP; not required with new fhircrackr version
+# is_fhir_bundle_empty <- function(bundlelist){
+#   length(xml2::xml_find_first(bundlelist[[1]], "entry"))==0
+# }
+
+
 
 
 #create function to check whether IDs could be retrieved
@@ -21,5 +23,5 @@ contains_ids <- function(vec) {
 
 
 
-
+print("support functions complete")
 
