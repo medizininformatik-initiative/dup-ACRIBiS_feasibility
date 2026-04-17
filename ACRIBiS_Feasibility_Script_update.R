@@ -12,13 +12,22 @@ source("chads_vasc.R")
 #after loading config, so that correct reference exists
 setwd(working_directory)
 
-#create log file, named for date and time of creation
-if(!dir.exists("logs")){
-  dir.create(paste0(diz_short, "logs"))
-  }
-log <- paste0(diz_short, "logs/", format(Sys.time(), "%Y%m%d_%H%M%S"),".txt", collapse = "")
-write(paste("Starting Script ACRIBiS_Feasibility_Script.R at", Sys.time()), file = log, append = T)
+log_dir <- file.path(diz_short, "_logs")
 
+if (!dir.exists(log_dir)) {
+  dir.create(log_dir, recursive = TRUE)
+}
+
+log <- file.path(
+  log_dir,
+  paste0(format(Sys.time(), "%Y%m%d_%H%M%S"), ".txt")
+)
+
+write(
+  paste("Starting Script ACRIBiS_Feasibility_Script_update.R at", Sys.time()),
+  file = log,
+  append = TRUE
+)
 
 #in case of timeout use 
 #httr::set_config(httr::timeout(1800)) #timeout in seconds
