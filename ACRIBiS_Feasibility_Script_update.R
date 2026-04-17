@@ -362,7 +362,7 @@ medications_sglt2i <- c("A10BK01", "A10BK02", "A10BK03", "A10BK04", "A10BK05", "
 
 #no paste, because that creates a single string instead of a list
 medications_all <- c(medications_betablockers, medications_acei_arb, medications_antithrombotic, 
-                     medications_torasemid, meidcations_furosemid, medications_statins, medications_heparin, medications_mra, medications_arni, medications_sglt2i)
+                     medications_torasemid, medications_furosemid, medications_statins, medications_heparin, medications_mra, medications_arni, medications_sglt2i)
 
 
 #Procedures
