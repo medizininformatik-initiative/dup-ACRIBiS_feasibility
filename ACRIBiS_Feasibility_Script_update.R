@@ -481,13 +481,13 @@ if(length(bundles_patient)==0){
                 log_errors = "logs/fhir_search_errors.txt")
   })
 }
-#unpack nested fhir_bundle_lists, no longer required, as fhir_crack handles this internally
+
 #give out statements after certain chunks to document progress
 write(paste("Finished Search for Patient-Resource at", Sys.time(), "\n"), file = log, append = T)
 write(paste(length(bundles_patient), " Bundles for the Patient-Resource were found \n"), file = log, append = T)
 
-#unlist to enable cracking
-bundles_patient <- unlist(bundles_patient, recursive = FALSE)
+#put bundles into fhir_bundle_list explicitely to prevent errors
+bundles_patient <- fhircrackr::fhir_bundle_list(bundles_patient)
 
 #crack bundles into table
 #if(is_fhir_bundle_empty(bundles_patient) == TRUE) {
@@ -542,8 +542,9 @@ if(length(bundles_condition)==0){
   })
 }
 
-#unpack nested fhir_bundle_lists, no longer required, as fhir_crack handles this internally
-#bundles_condition <- unlist(bundles_condition, recursive = F)
+#put bundles into fhir_bundle_list explicitely to prevent errors
+bundles_condition <- fhircrackr::fhir_bundle_list(bundles_condition)
+
 #give out statements after certain chunks to document progress
 write(paste("Finished Search for Condition-Resource at", Sys.time(), "\n"), file = log, append = T)
 write(paste(length(bundles_condition), " Bundles for the Condition-Resource were found \n"), file = log, append = T)
@@ -601,14 +602,12 @@ if(length(bundles_observation)==0){
   })
 }
 
-#unpack nested fhir_bundle_lists, no longer required, as fhir_crack handles this internally
-#bundles_observation <- unlist(bundles_observation, recursive = F)
+#put bundles into fhir_bundle_list explicitely to prevent errors
+bundles_observation <- fhircrackr::fhir_bundle_list(bundles_observation)
+
 #give out statements after certain chunks to document progress
 write(paste("Finished Search for Observation-Resource at", Sys.time(), "\n"), file = log, append = T)
 write(paste(length(bundles_observation), " Bundles for the Observation-Resource were found \n"), file = log, append = T)
-
-#unlist to enable cracking
-bundles_observation <- unlist(bundles_observation, recursive = FALSE)
 
 #if(is_fhir_bundle_empty(bundles_observation) == TRUE) {
 if(fhircrackr::fhir_is_empty(bundles_observation) == TRUE) {
@@ -660,14 +659,14 @@ bundles_medicationAdministration <- lapply(patient_ids_with_conditions_list, fun
                  log_errors = "logs/fhir_search_errors.txt")
    })
  }
-#unpack nested fhir_bundle_lists, no longer required, as fhir_crack handles this internally
-#bundles_medicationAdministration <- unlist(bundles_medicationAdministration, recursive = F)
+
+#put bundles into fhir_bundle_list explicitely to prevent errors
+bundles_medicationAdministration <- fhircrackr::fhir_bundle_list(bundles_medicationAdministration)
+
 #give out statements after certain chunks to document progress
 write(paste("Finished Search for MedicationAdministration-Resource at", Sys.time(), "\n"), file = log, append = T)
 write(paste(length(bundles_medicationAdministration), " Bundles for the MedicationAdministration-Resource were found \n"), file = log, append = T)
 
-#unlist to enable cracking
-bundles_medicationAdministration <- unlist(bundles_medicationAdministration, recursive = FALSE)
 
 #crack immediately to provide ids for medication-search
 #if(is_fhir_bundle_empty(bundles_medicationAdministration) == TRUE) {
@@ -736,14 +735,13 @@ bundles_medication <- lapply(medicationAdministration_medication_ids_list, funct
    })
  }
 
-#unlist to enable cracking
-bundles_medication <- unlist(bundles_medication, recursive = FALSE)
 
-#unpack nested fhir_bundle_lists, no longer required, as fhir_crack handles this internally
-#bundles_medication <- unlist(bundles_medication, recursive = F)
+#put bundles into fhir_bundle_list explicitely to prevent errors
+bundles_medication <- fhircrackr::fhir_bundle_list(bundles_medication)
+
 #check data availability and crack bundles to extract medication_ids
 #if(is_fhir_bundle_empty(bundles_medicationAdministration) == TRUE) {
-if(fhircrackr::fhir_is_empty(bundles_medicationAdministration) == TRUE) {
+if(fhircrackr::fhir_is_empty(bundles_medication) == TRUE) {
   message("The bundle you are trying to crack is empty. This will result in an error. Therefore the bundle will not be cracked.  An empty table has been created.")
   table_medications <- data.frame(medication_identifier      = character(),
                                   medication_system          = character(),
@@ -827,14 +825,12 @@ if(length(bundles_procedure)==0){
   })
 }
 
-#unpack nested fhir_bundle_lists, no longer required, as fhir_crack handles this internally
-#bundles_procedure <- unlist(bundles_procedure, recursive = F)
+#put bundles into fhir_bundle_list explicitely to prevent errors
+bundles_procedure <- fhircrackr::fhir_bundle_list(bundles_procedure)
+
 #give out statements after certain chunks to document progress
 write(paste("Finished Search for Procedure-Resource at", Sys.time(), "\n"), file = log, append = T)
 write(paste(length(bundles_procedure), " Bundles for the Procedure-Resource were found \n"), file = log, append = T)
-
-#unlist to enable cracking
-bundles_procedure <- unlist(bundles_procedure, recursive = FALSE)
 
 #if(is_fhir_bundle_empty(bundles_procedure) == TRUE) {
 if(fhircrackr::fhir_is_empty(bundles_procedure) == TRUE) {
