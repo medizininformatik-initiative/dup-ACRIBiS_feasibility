@@ -215,7 +215,7 @@ if(length(bundles_patient_conditions)==0){
 }
 #unpack nested fhir_bundle_lists, no longer required, as fhir_crack handles this internally
 #still required for other xml methods
-bundles_patient_conditions <- unlist(bundles_patient_conditions, recursive = FALSE)y
+bundles_patient_conditions <- unlist(bundles_patient_conditions, recursive = FALSE)
 #bundles_patient_conditions <- unlist(bundles_patient_conditions, recursive = F)
 # no saving necessary
 table_patient_conditions <- fhir_crack(bundles = bundles_patient_conditions, design = tabledescription_condition, verbose = 1)
