@@ -486,6 +486,9 @@ if(length(bundles_patient)==0){
 write(paste("Finished Search for Patient-Resource at", Sys.time(), "\n"), file = log, append = T)
 write(paste(length(bundles_patient), " Bundles for the Patient-Resource were found \n"), file = log, append = T)
 
+#unlist to enable cracking
+bundles_patient <- unlist(bundles_patient, recursive = FALSE)
+
 #crack bundles into table
 #if(is_fhir_bundle_empty(bundles_patient) == TRUE) {
 if(fhircrackr::fhir_is_empty(bundles_patient) == TRUE) {
@@ -545,6 +548,8 @@ if(length(bundles_condition)==0){
 write(paste("Finished Search for Condition-Resource at", Sys.time(), "\n"), file = log, append = T)
 write(paste(length(bundles_condition), " Bundles for the Condition-Resource were found \n"), file = log, append = T)
 
+#unlist to enable cracking
+bundles_condition <- unlist(bundles_condition, recursive = FALSE)
 
 #if(is_fhir_bundle_empty(bundles_condition) == TRUE) {
 if(fhircrackr::fhir_is_empty(bundles_condition) == TRUE) {
@@ -602,6 +607,9 @@ if(length(bundles_observation)==0){
 write(paste("Finished Search for Observation-Resource at", Sys.time(), "\n"), file = log, append = T)
 write(paste(length(bundles_observation), " Bundles for the Observation-Resource were found \n"), file = log, append = T)
 
+#unlist to enable cracking
+bundles_observation <- unlist(bundles_observation, recursive = FALSE)
+
 #if(is_fhir_bundle_empty(bundles_observation) == TRUE) {
 if(fhircrackr::fhir_is_empty(bundles_observation) == TRUE) {
   message("The bundle you are trying to crack is empty. This will result in an error. Therefore the bundle will not be cracked. An empty table has been created.")
@@ -657,6 +665,9 @@ bundles_medicationAdministration <- lapply(patient_ids_with_conditions_list, fun
 #give out statements after certain chunks to document progress
 write(paste("Finished Search for MedicationAdministration-Resource at", Sys.time(), "\n"), file = log, append = T)
 write(paste(length(bundles_medicationAdministration), " Bundles for the MedicationAdministration-Resource were found \n"), file = log, append = T)
+
+#unlist to enable cracking
+bundles_medicationAdministration <- unlist(bundles_medicationAdministration, recursive = FALSE)
 
 #crack immediately to provide ids for medication-search
 #if(is_fhir_bundle_empty(bundles_medicationAdministration) == TRUE) {
@@ -724,6 +735,9 @@ bundles_medication <- lapply(medicationAdministration_medication_ids_list, funct
                  log_errors = "logs/fhir_search_errors.txt")
    })
  }
+
+#unlist to enable cracking
+bundles_medication <- unlist(bundles_medication, recursive = FALSE)
 
 #unpack nested fhir_bundle_lists, no longer required, as fhir_crack handles this internally
 #bundles_medication <- unlist(bundles_medication, recursive = F)
@@ -818,6 +832,9 @@ if(length(bundles_procedure)==0){
 #give out statements after certain chunks to document progress
 write(paste("Finished Search for Procedure-Resource at", Sys.time(), "\n"), file = log, append = T)
 write(paste(length(bundles_procedure), " Bundles for the Procedure-Resource were found \n"), file = log, append = T)
+
+#unlist to enable cracking
+bundles_procedure <- unlist(bundles_procedure, recursive = FALSE)
 
 #if(is_fhir_bundle_empty(bundles_procedure) == TRUE) {
 if(fhircrackr::fhir_is_empty(bundles_procedure) == TRUE) {
